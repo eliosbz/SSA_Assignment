@@ -34,15 +34,34 @@ contract Taxpayer {
 
     //We require new_spouse != address(0);
     function marry(address new_spouse) public {
+        Taxpayer spouse_tp = Taxpayer(new_spouse);
+
+        require(new_spouse != address(0));
+        require(new_spouse != parent1 && new_spouse != parent2);
+        require(new_spouse != address(this));
+        require(age >= 18);
+        require(!isMarried && spouse == address(0));
+        require(!spouse_tp.getIsMarried() && spouse_tp.getSpouse() == address(0));
+
         spouse = new_spouse;
         isMarried = true;
+
+        if (spouse_tp.getSpouse() != address(this)) {
+            spouse_tp.marry(address(this));
+        }
     }
 
     function divorce() public {
-        Taxpayer sp = Taxpayer(address(spouse));
-        //sp.setSpouse(address(0));
+        Taxpayer spouse_tp = Taxpayer(address(spouse));
+
+        require(isMarried && spouse != address(0));
+
         spouse = address(0);
         isMarried = false;
+
+        if (spouse_tp.getIsMarried()) {
+            spouse_tp.divorce();
+        }
     }
 
     /* Transfer part of tax allowance to own spouse */
@@ -59,7 +78,7 @@ contract Taxpayer {
     function haveBirthday() public {
         age++;
     }
-
+    
     function getIsMarried() public returns (bool) {
         return isMarried;
     }
