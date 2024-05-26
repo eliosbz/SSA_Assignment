@@ -79,11 +79,11 @@ contract Taxpayer {
         age++;
     }
     
-    function getIsMarried() public returns (bool) {
+    function getIsMarried() public view returns (bool) {
         return isMarried;
     }
 
-    function getSpouse() public returns (address) {
+    function getSpouse() public view returns (address) {
         return spouse;
     }
 
@@ -91,7 +91,7 @@ contract Taxpayer {
         tax_allowance = ta;
     }
 
-    function getTaxAllowance() public returns (uint) {
+    function getTaxAllowance() public view returns (uint) {
         return tax_allowance;
     }
 }
