@@ -50,7 +50,7 @@ contract Taxpayer {
             spouse_tp.marry(address(this));
         }
     }
-
+    
     function divorce() public {
         Taxpayer spouse_tp = Taxpayer(address(spouse));
 
@@ -58,15 +58,19 @@ contract Taxpayer {
 
         spouse = address(0);
         isMarried = false;
+        tax_allowance = DEFAULT_ALLOWANCE;
 
         if (spouse_tp.getIsMarried()) {
             spouse_tp.divorce();
         }
     }
-
+    
     /* Transfer part of tax allowance to own spouse */
     function transferAllowance(uint change) public {
-        tax_allowance = tax_allowance - change;
+        require(isMarried);
+        require(change <= tax_allowance);
+        
+        tax_allowance -= change;
         Taxpayer sp = Taxpayer(address(spouse));
         sp.setTaxAllowance(sp.getTaxAllowance() + change);
     }

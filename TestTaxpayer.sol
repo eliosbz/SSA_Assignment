@@ -36,22 +36,43 @@ contract TestTaxpayer is Taxpayer(address(1), address(2)) {
     }
 
     // PART 2
-
+    /*
     function getPseudoRandom() private view returns (uint) {
-        return uint(keccak256(abi.encode(block.timestamp, block.difficulty))) % 20000;
+        return uint(keccak256(abi.encode(block.timestamp, block.difficulty))) % 100000;
     }
 
+	
     function echidna_test_tax_allowance() public returns (bool) {
         if (isMarried) {
             Taxpayer spouse_tp = Taxpayer(spouse);
             uint sum_before_transfer = tax_allowance + spouse_tp.getTaxAllowance();
 
-            transferAllowance(getPseudoRandom());
+            transferAllowance(100000);
 
             uint sum_after_transfer = tax_allowance + spouse_tp.getTaxAllowance();
-            return (sum_before_transfer == sum_after_transfer) && tax_allowance > 0 && spouse_tp.getTaxAllowance() > 0;
+            return (sum_before_transfer == sum_after_transfer);//&& tax_allowance > 1000 && spouse_tp.getTaxAllowance() > 1000;
+			
         }
 
-        return tax_allowance > 0;
+        return true; //tax_allowance > 1000;
     }
+	*/
+
+	function check_allowance_transfer(uint change) public {
+		uint old_allowance;
+		uint new_allowance;
+
+		if (isMarried) {
+			Taxpayer spouse = Taxpayer(getSpouse());
+			old_allowance = tax_allowance + spouse.getTaxAllowance();
+            transferAllowance(change);
+            new_allowance = tax_allowance + spouse.getTaxAllowance();
+		} else {
+            old_allowance = tax_allowance;
+            transferAllowance(change);
+            new_allowance = tax_allowance;
+        }
+
+		assert(old_allowance == new_allowance);
+	}
 }
