@@ -18,7 +18,8 @@ contract Taxpayer {
     uint constant ALLOWANCE_OAP = 7000;
 
     /* Income tax allowance */
-    uint tax_allowance;
+    uint single_tax_allowance;
+    uint married_tax_allowance;
 
     uint income;
 
@@ -29,22 +30,24 @@ contract Taxpayer {
         parent2 = p2;
         spouse = address(0);
         income = 0;
-        tax_allowance = DEFAULT_ALLOWANCE;
+        single_tax_allowance = DEFAULT_ALLOWANCE;
+        married_tax_allowance = 0;
     }
 
     //We require new_spouse != address(0);
     function marry(address new_spouse) public {
         Taxpayer spouse_tp = Taxpayer(new_spouse);
-
+        
         require(new_spouse != address(0));
         require(new_spouse != parent1 && new_spouse != parent2);
         require(new_spouse != address(this));
         require(age >= 18);
         require(!isMarried && spouse == address(0));
         require(!spouse_tp.getIsMarried() && spouse_tp.getSpouse() == address(0));
-
+        
         spouse = new_spouse;
         isMarried = true;
+        married_tax_allowance = single_tax_allowance;
 
         if (spouse_tp.getSpouse() != address(this)) {
             spouse_tp.marry(address(this));
@@ -58,7 +61,7 @@ contract Taxpayer {
 
         spouse = address(0);
         isMarried = false;
-        tax_allowance = DEFAULT_ALLOWANCE;
+        married_tax_allowance = 0;
 
         if (spouse_tp.getIsMarried()) {
             spouse_tp.divorce();
@@ -67,10 +70,11 @@ contract Taxpayer {
     
     /* Transfer part of tax allowance to own spouse */
     function transferAllowance(uint change) public {
+        require(change > 0);
         require(isMarried);
-        require(change <= tax_allowance);
+        require(change <= married_tax_allowance);
         
-        tax_allowance -= change;
+        married_tax_allowance -= change;
         Taxpayer sp = Taxpayer(address(spouse));
         sp.setTaxAllowance(sp.getTaxAllowance() + change);
     }
@@ -81,6 +85,14 @@ contract Taxpayer {
 
     function haveBirthday() public {
         age++;
+
+        if (age == 65 && single_tax_allowance == DEFAULT_ALLOWANCE) {
+            single_tax_allowance = ALLOWANCE_OAP;
+
+            if (isMarried) {
+                married_tax_allowance += (ALLOWANCE_OAP - DEFAULT_ALLOWANCE);
+            }
+        }
     }
     
     function getIsMarried() public view returns (bool) {
@@ -92,10 +104,43 @@ contract Taxpayer {
     }
 
     function setTaxAllowance(uint ta) public {
-        tax_allowance = ta;
+        if (isMarried) {
+            if (ta >= single_tax_allowance) {
+                married_tax_allowance += (ta - single_tax_allowance);
+            } else {
+                require((single_tax_allowance - ta) <= married_tax_allowance);
+                married_tax_allowance -= (single_tax_allowance - ta);
+            }
+        }
+
+        single_tax_allowance = ta;
     }
 
     function getTaxAllowance() public view returns (uint) {
-        return tax_allowance;
+        if (isMarried) {
+            return married_tax_allowance;
+        }
+
+        return single_tax_allowance;
+    }
+
+    function setIncome(uint new_income) public {
+        income = new_income;
+    }
+
+    function getIncome() public view returns (uint) {
+        return income;
+    }
+
+    function getTaxesToPay(uint percentage) public view returns (uint) {
+        require(percentage <= 100);
+        uint taxesAmount = 0;
+
+        if (income > getTaxAllowance()) {
+            uint taxableIncome = income - getTaxAllowance();
+            taxesAmount = (taxableIncome / 100) * percentage;
+        }
+
+        return taxesAmount;
     }
 }
