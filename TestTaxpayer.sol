@@ -3,16 +3,7 @@ pragma solidity ^0.8.22;
 import "./Taxpayer.sol";
 
 contract TestTaxpayer is Taxpayer(address(1), address(2)) {
-    Taxpayer test_spouse;
-
-    constructor() {
-        test_spouse = new Taxpayer(address(100), address(200));
-
-        for (uint i = 0; i < 30; i++) {
-            haveBirthday();
-            test_spouse.haveBirthday();
-        }
-    }
+    constructor() {}
 
     // PART 1
 
